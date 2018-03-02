@@ -4,12 +4,13 @@ import chisel3._
 import chisel3.core.IntParam
 import chisel3.util._
 import freechips.rocketchip.config.{Field, Parameters}
-import freechips.rocketchip.coreplex.CacheBlockBytes
-import freechips.rocketchip.coreplex.{HasSystemBus, HasPeripheryBus}
+import freechips.rocketchip.subsystem.CacheBlockBytes
+import freechips.rocketchip.subsystem.BaseSubsystem
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.regmapper.{RegisterReadIO, RegField, HasRegMap}
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.util.{ParameterizedBundle, DecoupledHelper, UIntIsOneOf}
+import freechips.rocketchip.interrupts._
 import scala.math.max
 
 case class BlockDeviceConfig(nTrackers: Int = 1)
@@ -331,7 +332,7 @@ class BlockDeviceController(address: BigInt, beatBytes: Int)(implicit p: Paramet
 
   frontend.node := mmio
   intnode := frontend.intnode
-  trackers.foreach { tr => mem := TLWidthWidget(dataBitsPerBeat/8)(tr.node) }
+  trackers.foreach { tr => mem := TLWidthWidget(dataBitsPerBeat/8) := tr.node }
 
   lazy val module = new BlockDeviceControllerModule(this)
 }
@@ -429,15 +430,16 @@ class SimBlockDevice(implicit p: Parameters)
   })
 }
 
-trait HasPeripheryBlockDevice extends HasPeripheryBus with HasSystemBus {
+trait HasPeripheryBlockDevice extends BaseSubsystem {
   implicit val p: Parameters
 
   val controller = LazyModule(new BlockDeviceController(
-    0x10015000, pbus.beatBytes))
-
-  controller.mmio := pbus.toVariableWidthSlaves
+    0x10015000, pbus.beatBytes)(p))
+/* FIXME:
+  controller.mmio := pbus.toVariableWidthSlave()
   sbus.fromSyncPorts() :=* controller.mem
   ibus.fromSync := controller.intnode
+  */
 }
 
 trait HasPeripheryBlockDeviceModuleImp extends LazyModuleImp {

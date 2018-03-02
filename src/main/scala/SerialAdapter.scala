@@ -3,7 +3,7 @@ package testchipip
 import chisel3._
 import chisel3.util._
 import freechips.rocketchip.config.{Parameters, Field}
-import freechips.rocketchip.coreplex.HasSystemBus
+import freechips.rocketchip.subsystem.BaseSubsystem
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.util._
 import scala.math.min
@@ -13,7 +13,7 @@ case object SerialAdapter {
 }
 import SerialAdapter._
 
-class SerialAdapter(implicit p: Parameters) extends LazyModule {
+class SerialAdapter()(implicit p: Parameters) extends LazyModule {
   val node = TLHelper.makeClientNode(
     name = "serial", sourceId = IdRange(0,1))
 
@@ -178,11 +178,11 @@ class SimSerial(w: Int) extends BlackBox {
   })
 }
 
-trait HasPeripherySerial extends HasSystemBus {
+trait HasPeripherySerial extends BaseSubsystem {
   implicit val p: Parameters
 
-  val adapter = LazyModule(new SerialAdapter)
-  sbus.fromSyncPorts() := adapter.node
+  val adapter = LazyModule(new SerialAdapter()(p))
+  sbus.fromFrontBus(adapter.node)
 }
 
 trait HasPeripherySerialModuleImp extends LazyModuleImp {

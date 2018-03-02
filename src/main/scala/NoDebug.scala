@@ -4,8 +4,10 @@ import chisel3._
 import chisel3.core.Reset
 import freechips.rocketchip.devices.debug.HasPeripheryDebug
 import freechips.rocketchip.config.Parameters
+import freechips.rocketchip.subsystem.BaseSubsystem
 
-trait HasNoDebug extends HasPeripheryDebug {
+trait HasNoDebug extends BaseSubsystem with HasPeripheryDebug {
+
 }
 
 trait HasNoDebugModuleImp {
